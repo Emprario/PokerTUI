@@ -31,6 +31,7 @@ class Pile:
 
 
 class UI:
+    allow_clear = True
 
     def __init__(self, autoflush: bool = False):
         self.autoflush = autoflush
@@ -96,7 +97,7 @@ class UI:
                 self.flush(self.vprint)
 
     #@update_size
-    def vprint(self, txt, end: bool = None, buff = "    "):
+    def vprint(self, txt, end: bool = None, buff="    "):
         """Print a TUI line"""
         end = self.autoflush if end == None else end
         self.buff_vprint += buff + txt
@@ -107,7 +108,8 @@ class UI:
 
     def clear(self):
         """Clear the TUI"""
-        sys("clear")
+        if self.allow_clear:
+            sys("clear")
 
     #@update_size
     def vimage(self, fileaspath: str, end: bool = None):
@@ -132,13 +134,13 @@ class UI:
         self.flush(self.vpara)
 
     def vseparation(self):
-        self.vprint("\n",end = True)
-        columns,lines = gts()
+        self.vprint("\n", end=True)
+        columns, lines = gts()
         del lines
         for i in range(columns):
-            self.vprint("#",buff = "")
-            self.vprint("#",buff = "")
+            self.vprint("#", buff="")
+            self.vprint("#", buff="")
         self.flush(self.vprint)
 
-    def vinput(self,prompt:str):
+    def vinput(self, prompt: str):
         return input(prompt)

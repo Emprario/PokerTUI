@@ -1,3 +1,12 @@
 {
-  "files": {}
+  "files": {
+    "assets/samples/_default_pique.cmi": [
+      {
+        "id": "ef63dc57-cd92-4323-b4b1-44c863fc38ba",
+        "line": 1,
+        "version": 1,
+        "index": 0
+      }
+    ]
+  }
 }

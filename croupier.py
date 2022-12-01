@@ -17,7 +17,8 @@ class Croupier():
         self.cid = 0
         self.players = dict()
         self.Table = []
-        self.order = (self.__get_flop, self.__get_tour, self.__get_river)
+        self.order = (self.__get_first, self.__get_flop, self.__get_tour,
+                      self.__get_river)
         self.pot = 0
         self.activeid = 0
         self.states = ("Actif", "Couché", "Focus", "ATapis", "Out")
@@ -25,9 +26,28 @@ class Croupier():
         self.idblind_small = 0
         self.idblind_big = 0
         self.small_blind = 5
+        self.base_money = 0
+        self.file_couleurs = {
+            "Carreau": "carreau",
+            "Coeur": "coeur",
+            "Pique": "pique",
+            "Trèfle": "trefle"
+        }
+        self.file_figures = {
+            "Jocker": "J",
+            "Queen": "Q",
+            "King": "K",
+            "Ace": "As"
+        }
 
-    def set_small_blind(self,blind:int):
+    def set_base_money(self, x):
+        self.base_money = x
+
+    def set_small_blind(self, blind: int):
         self.small_blind = blind
+
+    def get_small_blind(self) -> int:
+        return self.small_blind
 
     def get_deck(self):
         return self.deck
@@ -55,13 +75,20 @@ class Croupier():
             print("None", end="  ")
         print("\b\b]")
 
-    def add_player(self,name) -> int:
+    def add_player(self, name) -> int:
         self.cid += 1
-        self.players[self.cid] = Player(name)
+        self.players[self.cid] = Player(self.base_money, name)
         return self.cid
 
     def get_last_player_id(self) -> int:
         return self.cid
+
+    def get_nbplayers_notout(self):
+        i = 0
+        for id in self.players:
+            if not self.players[id].out:
+                i += 1
+        return i
 
     def del_player(self, id: int):
         del self.players[id]
@@ -71,6 +98,10 @@ class Croupier():
             self.players[playerkey].cards = [
                 self.drop_card(), self.drop_card()
             ]
+            print(self.players[playerkey].cards)
+
+    def __get_first(self):
+        return []
 
     def __get_flop(self):
         return [self.drop_card() for i in range(3)]
@@ -97,6 +128,12 @@ class Croupier():
 
     def get_active_playername(self) -> str:
         return self.players[self.activeid].name
+
+    def next_player(self):
+        ids = [id for id in self.players]
+        for el in ids:
+            self.activeid = el
+            yield el
 
     def get_player_state(self, playerid: int) -> int:
         if self.players[playerid].out:
@@ -188,11 +225,27 @@ class Croupier():
         self.__ui.vprint(f"Dans le pot : {self.pot}", end=True)
 
     def print_private_info(self, playerid):
-        #TODO: print les cartes
+        self.print_cards(playerid)
         self.__ui.vprint(f"In Bank : {self.players[playerid].money}\n")
         self.__ui.vprint(
             f"Votre mise actuelle : {self.players[playerid].mise}")
         self.__ui.flush(self.__ui.vprint)
+
+    def print_cards(self, playerid=0):
+        """By default it prints the Table"""
+        if playerid == 0:
+            meth = self.get_onTable()
+        else:
+            meth = self.players[playerid].cards
+        for card in meth:
+            name = self.file_couleurs[card.couleur]
+            if card.figure in self.file_figures:
+                name += self.file_figures[card.figure]
+            else:
+                name += card.figure
+            self.__ui.vimage("assets/cmi/" + name + ".cmi")
+        if not meth == []:
+            self.__ui.flush(self.__ui.vimage)
 
     def ask_addmise(self, playerid, min):
         if self.players[playerid].iscouche or self.players[playerid].atapis:
@@ -258,15 +311,16 @@ class Croupier():
             self.pot += self.players[playerid].mise
             self.players[playerid].mise = 0
 
-    def set_isoff(self, playerid, kick=False):
-        if self.players[playerid].money == 0:
-            if kick:
-                self.kick_player(playerid)
-            else:
-                self.players[playerid].out = True
-                self.__ui.vprint(
-                    f"{self.players[playerid].name} n'a plus d'argent il est out !",
-                    True)
+    def set_isoff(self, kick=False):
+        for playerid in self.players:
+            if self.players[playerid].money == 0:
+                if kick:
+                    self.kick_player(playerid)
+                else:
+                    self.players[playerid].out = True
+                    self.__ui.vprint(
+                        f"{self.players[playerid].name} n'a plus d'argent il est out !",
+                        True)
 
     def kick_player(self, playerid):
         x = self.players[playerid]
@@ -280,20 +334,37 @@ class Croupier():
         self.players[playerid].money += self.pot
         self.pot = 0
 
-    def thebestplayer(self):
+    def thebestplayer(self) -> int:
         playerenjeu = [
             playerid for playerid in self.players
             if not self.players[playerid].iscouche
             and not self.players[playerid].out
         ]
         bestplayer = playerenjeu[0]
-        for i in range(playerenjeu):
-            x = self.__poker.the_best(self.get_onTable(), 
- bestplayer.cards, playerenjeu[i].cards)
+        for id in playerenjeu:
+            x = self.__poker.the_best(self.get_onTable(),
+                                      self.players[bestplayer].cards,
+                                      self.players[id].cards)
             if x == True:
                 continue
             elif x == False:
-                bestplayer = playerenjeu[i]
+                bestplayer = id
             elif x == None:
                 continue
         return bestplayer
+
+    def win(self):
+        self.__ui.clear()
+        self.__ui.vprint(
+            f"{self.players[self.__get_winner()]} win the game !!!!!")
+
+    def __get_winner(self) -> int:
+        return [id for id in self.players if not self.players[id].out][0]
+
+    def clear_data(self):
+        for playerid in self.players:
+            self.players[playerid].cards = []
+            self.players[playerid].iscouche = False
+            self.players[playerid].atapis = False
+        self.deck = None
+        self.Table = []

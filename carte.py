@@ -69,4 +69,3 @@ class Carte:
 
     def __str__(self):
         return str((self.get_figure(), self.get_couleur()))
-

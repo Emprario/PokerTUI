@@ -1,6 +1,8 @@
-from carte import Carte
-from croupier import Croupier
-from ui import UI
+#from carte import Carte
+#from croupier import Croupier
+#from ui import UI
+from game import Game
+#from createcards import create_cards
 
 
 def jeu2test():
@@ -40,8 +42,7 @@ def jeu2test():
     print(poker.the_best(lst, A, B))
 
 
-if __name__ == "__main__":
-    #jeu2test()
+def jeu2test2():
     TUI = UI()
     TUI.vimage("assets/cmi/carreau9.cmi", end=False)
     TUI.vimage("assets/cmi/coeurJ.cmi", end=False)
@@ -66,3 +67,8 @@ if __name__ == "__main__":
     croupier.print_public_info()
     croupier.print_private_info(Aid)
     croupier.ask_addmise(1, 10)
+
+
+if __name__ == "__main__":
+    #create_cards()
+    Game()

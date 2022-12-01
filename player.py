@@ -3,9 +3,9 @@ from random import choice
 
 class Player:
 
-    def __init__(self, name: str = None):
+    def __init__(self, money, name: str = None):
         self.cards = [] # Erease everything each time you modify cards
-        self.money = 0
+        self.money = money
         self.mise = 0
         if name == "" or name == None or len(
                 name.split()) != 1 or len(name) > 10:
