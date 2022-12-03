@@ -49,11 +49,19 @@ class Game():
             self.loop()
 
     def tour2game(self):
-        for key in self.croupier.next_player():
-            self.print_whole_table(key)
-            self.croupier.ask_addmise(key, self.croupier.get_small_blind())
-            self.__ui.vinput("Pressez 'entrer' pour passer au joueur suivant")
-            self.__ui.clear()
+        firstboth = True
+        kill = False
+        while not kill:
+            for key in self.croupier.next_player():
+                if self.equal(self.croupier.get_mises()) and not firstboth:
+                    kill = True
+                    break
+                self.print_whole_table(key)
+                self.croupier.ask_addmise(key, max(self.croupier.get_mises()))
+                self.__ui.vinput(
+                    "Pressez 'entrer' pour passer au joueur suivant")
+                self.__ui.clear()
+            firstboth = False
         self.croupier.set_pot()
 
     def print_whole_table(self, playerid):
@@ -66,6 +74,8 @@ class Game():
 
     def loop(self):
         while self.croupier.get_nbplayers_notout() > 1:
+            self.croupier.rolling_pieces()
+            self.croupier.set_blinds()
             self.croupier.gen_deck()
             self.croupier.shuffle_deck()
             self.croupier.distribute()
@@ -90,3 +100,9 @@ class Game():
         del self.croupier
         del self
         exit(0)
+
+    def equal(self, lst):
+        for i in range(1, len(lst)):
+            if lst[i - 1] != lst[i]:
+                return False
+        return True

@@ -22,9 +22,9 @@ class Croupier():
         self.pot = 0
         self.activeid = 0
         self.states = ("Actif", "Couché", "Focus", "ATapis", "Out")
-        self.iddealer = 0
-        self.idblind_small = 0
-        self.idblind_big = 0
+        self.idxdealer = 0
+        self.idxblind_small = 1
+        self.idxblind_big = 2
         self.small_blind = 5
         self.base_money = 0
         self.file_couleurs = {
@@ -171,8 +171,8 @@ class Croupier():
                 nickname[2] = "■"
                 nickname[17] = "■"
             elif activestate_id == 1:
-                nickname[2] = "X"
-                nickname[17] = "X"
+                nickname[2] = "-"
+                nickname[17] = "-"
             elif activestate_id == 3:
                 nickname[2] = "#"
                 nickname[17] = "#"
@@ -265,7 +265,7 @@ class Croupier():
                 else:
                     action = "miser"
                     add = int(add)
-                    assert add == min or add >= 2 * min
+                    assert add+self.players[playerid].mise == min or add+self.players[playerid].mise >= 2 * min
             except:
                 self.__ui.vprint(
                     f"Veuillez rentrez un nombre entier naturel égale à la mise minimale pour suivre : {min}\n"
@@ -294,15 +294,18 @@ class Croupier():
                 break
 
     def __miser(self, playerid, mise):
-        self.players[playerid].money -= mise
-        self.players[playerid].mise = mise
+        if self.players[playerid].money == mise:
+             self.__tapis(playerid)
+        else:
+            self.players[playerid].money -= mise
+            self.players[playerid].mise += mise
 
     def __se_coucher(self, playerid):
         self.players[playerid].iscouche = True
 
     def __tapis(self, playerid):
         self.players[playerid].atapis = True
-        self.players[playerid].mise = self.players[playerid].money
+        self.players[playerid].mise += self.players[playerid].money
         self.players[playerid].money = 0
 
     def set_pot(self):
@@ -368,3 +371,24 @@ class Croupier():
             self.players[playerid].atapis = False
         self.deck = None
         self.Table = []
+
+    def rolling_pieces(self):
+        """Change the pieces : Dealer, Small Blind, Big Blind"""
+        self.idxdealer = [player for player in self.players
+                          ][(self.idxdealer + 1) % len(self.players)]
+        self.idxblind_small = [player for player in self.players
+                               ][(self.idxblind_small + 1) % len(self.players)]
+        self.idxblind_big = [player for player in self.players
+                             ][(self.idxblind_big + 1) % len(self.players)]
+
+    def get_mises(self):
+        print([self.players[id].mise for id in self.players])
+        return [self.players[id].mise for id in self.players]
+
+    def set_blinds(self):
+        for playerid in self.players:
+            if playerid == self.idxblind_small:
+                self.__miser(playerid,self.small_blind)
+            elif playerid == self.idxblind_big:
+                self.__miser(playerid,self.small_blind*2)
+        

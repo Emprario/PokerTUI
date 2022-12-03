@@ -4,7 +4,7 @@ from random import choice
 class Player:
 
     def __init__(self, money, name: str = None):
-        self.cards = [] # Erease everything each time you modify cards
+        self.cards = []  # Erease everything each time you modify cards
         self.money = money
         self.mise = 0
         if name == "" or name == None or len(
@@ -14,4 +14,3 @@ class Player:
         self.iscouche = False
         self.atapis = False
         self.out = False
-        
