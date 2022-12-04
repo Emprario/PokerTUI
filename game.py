@@ -67,6 +67,7 @@ class Game():
                 else:
                     # Check if the player can play:
                     self.croupier.ask_addmise(key, max(self.croupier.get_mises()))
+                    #print(self.croupier.get_name(key))
                     self.__ui.vinput(
                             "Pressez 'entrer' pour passer au joueur suivant")
                 self.__ui.clear()
@@ -100,13 +101,16 @@ class Game():
                     self.win_manche(self.winner)
                     break
             else:
-                self.win_manche(self.croupier.thebestplayer())
+                self.win_manche(self.croupier.thebestplayer(),True)
 
         self.croupier.win()
         if self.auto:
             self.kill()
 
-    def win_manche(self,id):
+    def win_manche(self,id,show = False):
+        if show:
+            self.__ui.vprint(f"Jeu du gagnant ({self.croupier.get_name(self.winner)}) :")
+            self.print_whole_table(id)
         self.croupier.transaction(id)
         self.croupier.set_isoff()
         self.croupier.clear_data()

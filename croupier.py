@@ -136,7 +136,8 @@ class Croupier:
     def next_player(self):
         ids = self.__get_playersid_notout()
         for i in range(len(ids)):
-            self.activeid = self.__get_playersid_notout()[(self.idx+1)%len(ids)]
+            #print(self.idx+i+1,(self.idx+i+1)%len(ids),self.players[self.__get_playersid_notout()[(self.idx+i+1)%len(ids)]].name)
+            self.activeid = self.__get_playersid_notout()[(self.idx+i+1)%len(ids)]
             assert self.activeid in self.players
             yield self.activeid
 
@@ -274,10 +275,10 @@ class Croupier:
                     assert add+self.players[playerid].mise == min or add+self.players[playerid].mise >= 2 * min
             except:
                 self.__ui.vprint(
-                    f"Veuillez rentrez un nombre entier naturel égale à la mise minimale pour suivre : {min}\n"
+                    f"Veuillez rentrez un nombre entier naturel égale à la mise minimale pour suivre : {min-self.players[playerid].mise}\n"
                 )
                 self.__ui.vprint(
-                    f"Vous pouvez également relancer avec une somme supérieur ou égale au double de la mise maximale : {min*2}\n"
+                    f"Vous pouvez également relancer avec une somme supérieur ou égale au double de la mise maximale : {(min*2)-self.players[playerid].mise}\n"
                 )
                 self.__ui.vprint(
                     "Vous pouvez également vous coucher en tapant 'se coucher'"
@@ -408,3 +409,6 @@ class Croupier:
     
     def is_alone_couche(self):
         return self.get_nbplayers_couche() == self.get_nbplayers_notout()-1
+
+    def get_name(self,id):
+        return self.players[id].name
