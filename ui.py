@@ -109,7 +109,7 @@ class UI:
     def clear(self):
         """Clear the TUI"""
         if self.allow_clear:
-            sys("clear")
+            sys("cls")
 
     #@update_size
     def vimage(self, fileaspath: str, end: bool = None):

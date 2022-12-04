@@ -6,7 +6,7 @@ from random import shuffle
 from errors import Impossible42Error
 
 
-class Croupier():
+class Croupier:
     """User Logic Interface (between the user, UI and Poker)"""
     maxmoney = 99_999
 
@@ -22,9 +22,10 @@ class Croupier():
         self.pot = 0
         self.activeid = 0
         self.states = ("Actif", "Couché", "Focus", "ATapis", "Out")
-        self.idxdealer = 0
-        self.idxblind_small = 1
-        self.idxblind_big = 2
+        self.idx = 0
+        self.iddealer = None
+        self.idblind_small = None
+        self.idblind_big = None
         self.small_blind = 5
         self.base_money = 0
         self.file_couleurs = {
@@ -130,7 +131,7 @@ class Croupier():
         return self.players[self.activeid].name
 
     def next_player(self):
-        ids = [id for id in self.players]
+        ids = [id for id in self.players if not self.players[id].out]
         for el in ids:
             self.activeid = el
             yield el
@@ -247,7 +248,8 @@ class Croupier():
         if not meth == []:
             self.__ui.flush(self.__ui.vimage)
 
-    def ask_addmise(self, playerid, min):
+    def ask_addmise(self, playerid, min) -> int:
+        """Return the state of the player"""
         if self.players[playerid].iscouche or self.players[playerid].atapis:
             self.__ui.vprint(
                 "Vous ne pouvez pas jouer ce tour ci. Soit vous vous êtes couché soit parti à tapis",
@@ -291,10 +293,11 @@ class Croupier():
                     self.__tapis(playerid)
                 else:
                     raise Impossible42Error("Croupier.ask_addmise")
-                break
+                return self.get_player_state(playerid)
+
 
     def __miser(self, playerid, mise):
-        if self.players[playerid].money == mise:
+        if self.players[playerid].money <= mise:
              self.__tapis(playerid)
         else:
             self.players[playerid].money -= mise
@@ -359,10 +362,10 @@ class Croupier():
     def win(self):
         self.__ui.clear()
         self.__ui.vprint(
-            f"{self.players[self.__get_winner()]} win the game !!!!!")
+            f"{self.players[self.get_winner()]} win the game !!!!!")
 
-    def __get_winner(self) -> int:
-        return [id for id in self.players if not self.players[id].out][0]
+    def get_winner(self) -> int:
+        return [id for id in self.players if not self.players[id].out and not self.players[id].iscouche][0]
 
     def clear_data(self):
         for playerid in self.players:
@@ -374,12 +377,13 @@ class Croupier():
 
     def rolling_pieces(self):
         """Change the pieces : Dealer, Small Blind, Big Blind"""
-        self.idxdealer = [player for player in self.players
-                          ][(self.idxdealer + 1) % len(self.players)]
-        self.idxblind_small = [player for player in self.players
-                               ][(self.idxblind_small + 1) % len(self.players)]
-        self.idxblind_big = [player for player in self.players
-                             ][(self.idxblind_big + 1) % len(self.players)]
+        self.iddealer = [player for player in self.players
+                          ][(self.idx + 1) % len(self.players)]
+        self.idblind_small = [player for player in self.players
+                               ][(self.idx + 2) % len(self.players)]
+        self.idblind_big = [player for player in self.players
+                             ][(self.idx + 3) % len(self.players)]
+        self.idx += 1
 
     def get_mises(self):
         print([self.players[id].mise for id in self.players])
@@ -387,8 +391,14 @@ class Croupier():
 
     def set_blinds(self):
         for playerid in self.players:
-            if playerid == self.idxblind_small:
+            if playerid == self.idblind_small:
                 self.__miser(playerid,self.small_blind)
-            elif playerid == self.idxblind_big:
+            elif playerid == self.idblind_big:
                 self.__miser(playerid,self.small_blind*2)
+
+    def get_nbplayers_couche(self):
+        return len([id for id in self.players if self.players[id].iscouche])
+
+    def get_nbplayers_atapis(self):
+        return len([id for id in self.players if self.players[id].atapis])
         

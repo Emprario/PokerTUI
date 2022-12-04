@@ -10,6 +10,7 @@ class Game():
         self.__ui = UI(True)
         self.blind = 0
         self.auto = auto
+        self.winner = 0
         if self.auto:
             self.init_game_local()
 
@@ -22,8 +23,7 @@ class Game():
                 self.croupier.set_base_money(x)
                 break
             except:
-                self.__ui.vprint(
-                    "La somme de base doit être supérieur strict à 0")
+                self.__ui.vprint("La somme de base doit être supérieur strict à 0")
 
         while self.__ui.vinput(
                 "Ajouter un joueur ? [o/n]"
@@ -51,16 +51,32 @@ class Game():
     def tour2game(self):
         firstboth = True
         kill = False
+        self.winner = 0
+        nbplayer = self.croupier.get_nbplayers_notout()
+        nbplayer_couche = self.croupier.get_nbplayers_couche()
+        nbplayer_atapis = self.croupier.get_nbplayers_atapis()
         while not kill:
             for key in self.croupier.next_player():
+                if nbplayer_couche == nbplayer-1:
+                    kill = True
+                    self.winner = self.croupier.get_winner()
+                    break
                 if self.equal(self.croupier.get_mises()) and not firstboth:
                     kill = True
                     break
-                self.print_whole_table(key)
-                self.croupier.ask_addmise(key, max(self.croupier.get_mises()))
-                self.__ui.vinput(
-                    "Pressez 'entrer' pour passer au joueur suivant")
-                self.__ui.clear()
+                else:
+                    self.print_whole_table(key)
+
+                    # Check if the player can play:
+
+                    rstate = self.croupier.ask_addmise(key, max(self.croupier.get_mises()))
+                    self.__ui.vinput(
+                        "Pressez 'entrer' pour passer au joueur suivant")
+                    if rstate == 1:
+                        nbplayer_couche += 1
+                    elif rstate == 3:
+                        nbplayer_atapis += 1
+                    self.__ui.clear()
             firstboth = False
         self.croupier.set_pot()
 
@@ -87,13 +103,20 @@ class Game():
                 self.tour2game()
                 self.__ui.vinput("Passer au tour suivant")
                 self.__ui.clear()
-            id = self.croupier.thebestplayer()
-            self.croupier.transaction(id)
-            self.croupier.set_isoff()
-            self.croupier.clear_data()
+                if self.winner != 0:
+                    self.win_manche(self.winner)
+                    break
+            else:
+                self.win_manche(self.croupier.thebestplayer())
+
         self.croupier.win()
         if self.auto:
             self.kill()
+
+    def win_manche(self,id):
+        self.croupier.transaction(id)
+        self.croupier.set_isoff()
+        self.croupier.clear_data()
 
     def kill(self):
         self.__ui.vinput("Confirmer la sortie du programme ...")
