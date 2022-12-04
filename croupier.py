@@ -90,6 +90,9 @@ class Croupier:
             if not self.players[id].out:
                 i += 1
         return i
+    
+    def __get_playersid_notout(self):
+        return [id for id in self.players if not self.players[id].out]
 
     def del_player(self, id: int):
         del self.players[id]
@@ -131,10 +134,11 @@ class Croupier:
         return self.players[self.activeid].name
 
     def next_player(self):
-        ids = [id for id in self.players if not self.players[id].out]
-        for el in ids:
-            self.activeid = el
-            yield el
+        ids = self.__get_playersid_notout()
+        for i in range(len(ids)):
+            self.activeid = self.__get_playersid_notout()[(self.idx+1)%len(ids)]
+            assert self.activeid in self.players
+            yield self.activeid
 
     def get_player_state(self, playerid: int) -> int:
         if self.players[playerid].out:
@@ -377,12 +381,9 @@ class Croupier:
 
     def rolling_pieces(self):
         """Change the pieces : Dealer, Small Blind, Big Blind"""
-        self.iddealer = [player for player in self.players
-                          ][(self.idx + 1) % len(self.players)]
-        self.idblind_small = [player for player in self.players
-                               ][(self.idx + 2) % len(self.players)]
-        self.idblind_big = [player for player in self.players
-                             ][(self.idx + 3) % len(self.players)]
+        self.iddealer = self.__get_playersid_notout()[(self.idx + 1) % len(self.players)]
+        self.idblind_small =self.__get_playersid_notout()[(self.idx + 2) % len(self.players)]
+        self.idblind_big = self.__get_playersid_notout()[(self.idx + 3) % len(self.players)]
         self.idx += 1
 
     def get_mises(self):
@@ -401,9 +402,6 @@ class Croupier:
 
     def get_nbplayers_atapis(self):
         return len([id for id in self.players if self.players[id].atapis])
-        
-    def is_alone_couche(self):
-        pass
 
     def is_alone_atapis(self):
         return self.get_nbplayers_atapis() == self.get_nbplayers_notout()-1
