@@ -11,6 +11,7 @@ class Game():
         self.blind = 0
         self.auto = auto
         self.winner = 0
+        self.gfirstboth = True
         if self.auto:
             self.init_game_local()
 
@@ -49,34 +50,26 @@ class Game():
             self.loop()
 
     def tour2game(self):
-        firstboth = True
+        firstboth = True and self.gfirstboth
         kill = False
         self.winner = 0
-        nbplayer = self.croupier.get_nbplayers_notout()
-        nbplayer_couche = self.croupier.get_nbplayers_couche()
-        nbplayer_atapis = self.croupier.get_nbplayers_atapis()
         while not kill:
             for key in self.croupier.next_player():
-                if nbplayer_couche == nbplayer-1:
+                self.print_whole_table(key)
+                if self.croupier.is_alone_couche():
                     kill = True
                     self.winner = self.croupier.get_winner()
-                    break
-                if self.equal(self.croupier.get_mises()) and not firstboth:
+                elif self.equal(self.croupier.get_mises()) and not firstboth:
                     kill = True
-                    break
+                elif self.croupier.is_alone_atapis() and not firstboth:
+                    kill = True
+                    self.gfirstboth = False
                 else:
-                    self.print_whole_table(key)
-
                     # Check if the player can play:
-
-                    rstate = self.croupier.ask_addmise(key, max(self.croupier.get_mises()))
+                    self.croupier.ask_addmise(key, max(self.croupier.get_mises()))
                     self.__ui.vinput(
-                        "Pressez 'entrer' pour passer au joueur suivant")
-                    if rstate == 1:
-                        nbplayer_couche += 1
-                    elif rstate == 3:
-                        nbplayer_atapis += 1
-                    self.__ui.clear()
+                            "Pressez 'entrer' pour passer au joueur suivant")
+                self.__ui.clear()
             firstboth = False
         self.croupier.set_pot()
 
@@ -97,7 +90,7 @@ class Game():
             self.croupier.distribute()
             self.__ui.vinput(
                 "Le jeu va commencer, le jeu du joueur 1 va être afficher"
-            )  # Brute input pour ca           cher les cartes
+            )  # Brute input pour cacher les cartes
             self.__ui.clear()
             for table in self.croupier.add_onTable():
                 self.tour2game()

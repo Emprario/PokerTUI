@@ -260,7 +260,7 @@ class Croupier:
             action = "miser"
             try:
                 if add in ("se coucher", "coucher", "abandonne", "STOP",
-                           "stop"):
+                           "stop","pass","passe"):
                     action = "se coucher"
                 elif add in ("TAPIS", "tapis", "tapi"):
                     action = "tapis"
@@ -402,3 +402,11 @@ class Croupier:
     def get_nbplayers_atapis(self):
         return len([id for id in self.players if self.players[id].atapis])
         
+    def is_alone_couche(self):
+        pass
+
+    def is_alone_atapis(self):
+        return self.get_nbplayers_atapis() == self.get_nbplayers_notout()-1
+    
+    def is_alone_couche(self):
+        return self.get_nbplayers_couche() == self.get_nbplayers_notout()-1
