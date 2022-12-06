@@ -109,7 +109,7 @@ class Game():
 
     def win_manche(self,id,show = False):
         if show:
-            self.__ui.vprint(f"Jeu du gagnant ({self.croupier.get_name(self.winner)}) :")
+            self.__ui.vprint(f"Jeu du gagnant ({self.croupier.get_name(id)}) :")
             self.print_whole_table(id)
         self.croupier.transaction(id)
         self.croupier.set_isoff()
